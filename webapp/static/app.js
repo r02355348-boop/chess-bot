@@ -11,10 +11,76 @@ class ChessApp {
         this.selectedSquare = null;
         this.validMoves = [];
         this.isMyTurn = false;
-        this.timeLeft = { w: 300000, b: 300000 }; // 5 minutes in ms
+        this.timeLeft = { w: 300000, b: 300000 };
         this.timerInterval = null;
+        this.lastMove = null;
+        
+        // Audio Context for procedural sounds
+        this.audioCtx = null;
         
         this.init();
+    }
+
+    initAudio() {
+        if (this.audioCtx) return;
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    playSound(type) {
+        if (!this.audioCtx) this.initAudio();
+        if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+
+        const now = this.audioCtx.currentTime;
+
+        switch(type) {
+            case 'move':
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+                break;
+            case 'capture':
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+                break;
+            case 'check':
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+                break;
+            case 'game_over':
+                [440, 554, 659].forEach((freq, i) => {
+                    const o = this.audioCtx.createOscillator();
+                    const g = this.audioCtx.createGain();
+                    o.type = 'sine';
+                    o.connect(g);
+                    g.connect(this.audioCtx.destination);
+                    o.frequency.setValueAtTime(freq, now + i * 0.1);
+                    g.gain.setValueAtTime(0.1, now + i * 0.1);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
+                    o.start(now + i * 0.1);
+                    o.stop(now + i * 0.1 + 0.4);
+                });
+                break;
+        }
     }
 
     init() {
@@ -157,11 +223,20 @@ class ChessApp {
                 square.dataset.row = displayRow;
                 square.dataset.col = displayCol;
                 
+                // Highlight last move
+                if (this.lastMove) {
+                    if ((this.lastMove.from.row === displayRow && this.lastMove.from.col === displayCol) ||
+                        (this.lastMove.to.row === displayRow && this.lastMove.to.col === displayCol)) {
+                        square.classList.add('last-move');
+                    }
+                }
+
                 const piece = this.game.board[displayRow][displayCol];
                 if (piece) {
-                    const pieceEl = document.createElement('span');
-                    pieceEl.className = `piece ${this.game.isWhitePiece(piece) ? 'white' : 'black'}`;
-                    pieceEl.textContent = this.game.getPieceSymbol(piece);
+                    const pieceEl = document.createElement('img');
+                    pieceEl.className = `piece`;
+                    const pieceName = (piece === piece.toUpperCase() ? 'w' : 'b') + piece.toUpperCase();
+                    pieceEl.src = `/static/pieces/${pieceName}.svg`;
                     square.appendChild(pieceEl);
                 }
                 
@@ -257,9 +332,16 @@ class ChessApp {
     }
 
     executeMove(move) {
+        this.lastMove = move;
         // Apply move locally
         this.game.makeMove(move);
         
+        if (move.capture) {
+            this.playSound('capture');
+        } else {
+            this.playSound('move');
+        }
+
         // Send to server
         this.sendMessage({
             event: 'move',
@@ -274,15 +356,32 @@ class ChessApp {
         this.renderBoard();
         this.updateStatus();
         
-        // Server will check for game end and send game_over event
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred('medium');
+        }
     }
 
     handleOpponentMove(moveData) {
+        this.lastMove = moveData;
         this.game.makeMove(moveData);
         this.isMyTurn = true;
+        
+        if (moveData.capture) {
+            this.playSound('capture');
+        } else {
+            this.playSound('move');
+        }
+
+        if (this.game.isInCheck(this.playerColor)) {
+            this.playSound('check');
+        }
+
         this.renderBoard();
         this.updateStatus();
-        // Server will send game_over event if game ended
+        
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('success');
+        }
     }
 
     updateStatus() {
@@ -314,21 +413,26 @@ class ChessApp {
 
     endGame(result, reason) {
         this.stopTimer();
+        this.playSound('game_over');
         
         const resultEl = document.getElementById('game-result');
         const reasonEl = document.getElementById('game-result-reason');
         
         const resultText = {
-            'win': 'Победа!',
-            'loss': 'Поражение',
-            'draw': 'Ничья'
+            'win': 'Победа! 🎉',
+            'loss': 'Поражение ❌',
+            'draw': 'Ничья 🤝'
         };
         
         resultEl.textContent = resultText[result] || 'Игра окончена';
         resultEl.className = result;
         reasonEl.textContent = reason;
         
-        this.showScreen('game-over-screen');
+        document.getElementById('game-over-screen').classList.add('active');
+
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred(result === 'win' ? 'success' : 'error');
+        }
     }
 
     resign() {
@@ -371,6 +475,11 @@ class ChessApp {
     showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
+        
+        // Handle special screen logic
+        if (screenId !== 'game-over-screen') {
+            document.getElementById('game-over-screen').classList.remove('active');
+        }
     }
 
     updatePlayerInfo() {
