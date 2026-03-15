@@ -424,9 +424,9 @@ class Chess {
         // King vs King
         if (pieces.w.length === 1 && pieces.b.length === 1) return true;
         
-        // King and minor piece vs King
-        if ((pieces.w.length === 1 && pieces.b.length === 2 && pieces.b.includes('n') || pieces.b.includes('b')) ||
-            (pieces.b.length === 1 && pieces.w.length === 2 && pieces.w.includes('n') || pieces.w.includes('b'))) {
+        // King and minor piece vs King - fixed parentheses
+        if ((pieces.w.length === 1 && pieces.b.length === 2 && (pieces.b.includes('n') || pieces.b.includes('b'))) ||
+            (pieces.b.length === 1 && pieces.w.length === 2 && (pieces.w.includes('n') || pieces.w.includes('b')))) {
             return true;
         }
 

@@ -348,8 +348,24 @@ class ChessApp {
         document.getElementById('matchmaking-status').classList.add('hidden');
         document.querySelector('.menu-buttons').classList.remove('hidden');
         
+        // Reset game state
         this.game = new Chess();
         this.gameId = null;
+        this.playerColor = null;
+        this.selectedSquare = null;
+        this.validMoves = [];
+        this.isMyTurn = false;
+        
+        // Stop timer
+        this.stopTimer();
+        
+        // Close old socket if exists
+        if (this.socket) {
+            this.socket.onclose = null; // Remove auto-reconnect
+            this.socket.close();
+            this.socket = null;
+        }
+        
         this.renderBoard();
     }
 
