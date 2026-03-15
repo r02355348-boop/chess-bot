@@ -12,8 +12,8 @@
     --bg-color: var(--tg-theme-bg-color, #0d1117);
     --text-color: var(--tg-theme-text-color, #c9d1d9);
     --card-bg: var(--tg-theme-secondary-bg-color, #161b22);
-    --board-light: #ebecd0;
-    --board-dark: #779556;
+    --board-light: #f0d9b5;
+    --board-dark: #b58863;
 }
 
 body {
@@ -152,8 +152,8 @@ h1 {
     aspect-ratio: 1;
     border-radius: 4px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    border: 2px solid var(--card-bg);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    border: 4px solid #3d2b1f;
     margin: auto 0;
 }
 
@@ -216,13 +216,15 @@ h1 {
     cursor: pointer;
     user-select: none;
     position: relative;
+    transition: background-color 0.2s;
 }
 
 .piece {
-    width: 85%;
-    height: 85%;
+    width: 95%;
+    height: 95%;
     pointer-events: none;
-    transition: transform 0.1s ease-out;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 .square.light {
@@ -235,29 +237,30 @@ h1 {
 
 .square.selected {
     background: #f6f669 !important;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
 }
 
 .square.valid-move::after {
     content: '';
     position: absolute;
-    width: 25%;
-    height: 25%;
-    background: rgba(0, 0, 0, 0.1);
+    width: 20%;
+    height: 20%;
+    background: rgba(0, 0, 0, 0.15);
     border-radius: 50%;
 }
 
 .square.valid-capture::after {
     content: '';
     position: absolute;
-    width: 80%;
-    height: 80%;
-    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 85%;
+    height: 85%;
+    border: 5px solid rgba(0, 0, 0, 0.15);
     border-radius: 50%;
     box-sizing: border-box;
 }
 
 .square.last-move {
-    background: rgba(255, 255, 0, 0.5) !important;
+    background: rgba(255, 255, 0, 0.4) !important;
 }
 
 .player-time.low {
