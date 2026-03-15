@@ -4,139 +4,180 @@
     box-sizing: border-box;
 }
 
+:root {
+    --primary-color: #58a6ff;
+    --secondary-color: #30363d;
+    --danger-color: #f85149;
+    --success-color: #3fb950;
+    --bg-color: var(--tg-theme-bg-color, #0d1117);
+    --text-color: var(--tg-theme-text-color, #c9d1d9);
+    --card-bg: var(--tg-theme-secondary-bg-color, #161b22);
+    --board-light: #ebecd0;
+    --board-dark: #779556;
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--tg-theme-bg-color, #1a1a2e);
-    color: var(--tg-theme-text-color, #fff);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
     min-height: 100vh;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 #app {
+    width: 100%;
     max-width: 500px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.screen {
-    display: none;
-}
-
-.screen.active {
-    display: block;
-}
-
-h1, h2 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 28px;
+h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 40px 0 20px;
+    background: linear-gradient(45deg, var(--primary-color), #bc85ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .menu-buttons {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-top: 50px;
+    gap: 12px;
+    margin-top: auto;
+    margin-bottom: 40px;
 }
 
 .btn {
-    padding: 16px 24px;
+    padding: 18px 24px;
     border: none;
-    border-radius: 12px;
-    font-size: 18px;
+    border-radius: 16px;
+    font-size: 17px;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary {
-    background: #4CAF50;
+    background: var(--primary-color);
+    color: white;
 }
 
 .btn-secondary {
-    background: #2196F3;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-danger {
-    background: #f44336;
-}
-
-.btn:hover {
-    transform: scale(1.02);
-    opacity: 0.9;
+    background: rgba(248, 81, 73, 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgba(248, 81, 73, 0.2);
 }
 
 .btn:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
+    filter: brightness(0.9);
 }
 
-#matchmaking-status {
-    text-align: center;
-    margin-top: 40px;
-}
-
-.spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid #4CAF50;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Chessboard styles */
-#game-screen {
-    padding: 10px;
-}
-
-.game-header, .game-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-}
-
+/* Игровая сцена */
 .player-info {
     display: flex;
-    gap: 15px;
     align-items: center;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px 15px;
-    border-radius: 8px;
+    justify-content: space-between;
+    background: var(--card-bg);
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 8px 0;
 }
 
 .player-name {
     font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .player-time {
-    font-family: monospace;
-    font-size: 18px;
-    color: #4CAF50;
+    font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--success-color);
 }
 
 .player-time.low {
-    color: #f44336;
+    color: var(--danger-color);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    50% { opacity: 0.6; }
 }
 
 #chessboard {
     width: 100%;
     aspect-ratio: 1;
-    margin: 15px 0;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    border: 4px solid var(--card-bg);
+}
+
+.game-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* Экран завершения */
+#game-over-screen {
+    background: rgba(13, 17, 23, 0.95);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    top: 0;left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+#game-over-screen.active {
+    display: flex;
+}
+
+.game-over-card {
+    background: var(--card-bg);
+    padding: 32px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+#game-result {
+    font-size: 28px;
+    margin-bottom: 8px;
 }
 
 .board-row {
@@ -151,104 +192,88 @@ h1, h2 {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
     cursor: pointer;
     user-select: none;
+    position: relative;
+}
+
+.piece {
+    width: 85%;
+    height: 85%;
+    pointer-events: none;
+    transition: transform 0.1s ease-out;
 }
 
 .square.light {
-    background: #f0d9b5;
+    background: var(--board-light);
 }
 
 .square.dark {
-    background: #b58863;
+    background: var(--board-dark);
 }
 
 .square.selected {
-    background: #7dd321 !important;
-}
-
-.square.valid-move {
-    position: relative;
+    background: #f6f669 !important;
 }
 
 .square.valid-move::after {
     content: '';
     position: absolute;
-    width: 30%;
-    height: 30%;
-    background: rgba(0, 0, 0, 0.3);
+    width: 25%;
+    height: 25%;
+    background: rgba(0, 0, 0, 0.1);
     border-radius: 50%;
-}
-
-.square.valid-capture {
-    position: relative;
 }
 
 .square.valid-capture::after {
     content: '';
     position: absolute;
-    width: 100%;
-    height: 100%;
-    border: 4px solid rgba(0, 0, 0, 0.3);
+    width: 80%;
+    height: 80%;
+    border: 4px solid rgba(0, 0, 0, 0.1);
     border-radius: 50%;
     box-sizing: border-box;
 }
 
 .square.last-move {
-    background: #cdd26a !important;
+    background: rgba(255, 255, 0, 0.5) !important;
 }
 
-.square.check {
-    background: radial-gradient(ellipse at center, #ff6b6b 0%, #ee5a5a 25%, #d64545 89%, #c73e3e 100%) !important;
-}
-
-.piece {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    cursor: grab;
-}
-
-.piece.white {
-    color: #fff;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-.piece.black {
-    color: #000;
-}
-
-.piece.dragging {
-    opacity: 0.5;
-}
-
-.game-controls {
-    display: flex;
-    gap: 10px;
-}
-
-.game-controls .btn {
-    padding: 10px 16px;
-    font-size: 14px;
-}
-
-#game-over-screen {
+#matchmaking-status {
     text-align: center;
-    padding-top: 100px;
+    margin-top: 40px;
+    background: var(--card-bg);
+    padding: 32px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-#game-result {
-    font-size: 36px;
-    margin-bottom: 15px;
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(88, 166, 255, 0.1);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
 }
 
-#game-result-reason {
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 40px;
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.hidden {
+    display: none !important;
+}
+
+.screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+}
+
+.screen.active {
+    display: flex;
 }
 
 /* Responsive */

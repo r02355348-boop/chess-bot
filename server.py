@@ -33,7 +33,8 @@ class GameManager:
         
     async def add_player(self, user_id: str, websocket: WebSocket):
         self.connections[user_id] = websocket
-        
+    
+    async def find_game(self, user_id: str):
         # Try to find opponent
         opponent = await self.find_opponent(user_id)
         if opponent:
@@ -41,9 +42,12 @@ class GameManager:
         else:
             # Add to waiting queue
             self.waiting_players[user_id] = {
-                'websocket': websocket,
                 'joined_at': datetime.now()
             }
+    
+    async def cancel_matchmaking(self, user_id: str):
+        if user_id in self.waiting_players:
+            del self.waiting_players[user_id]
     
     async def find_opponent(self, user_id: str) -> Optional[str]:
         # Find first waiting player who is not the current user
@@ -296,9 +300,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 event = data.get('event')
                 
                 if event == 'find_game':
-                    pass  # Already handled in add_player
+                    await game_manager.find_game(user_id)
                 elif event == 'cancel_matchmaking':
-                    game_manager.remove_player(user_id)
+                    await game_manager.cancel_matchmaking(user_id)
                 elif event == 'move':
                     await game_manager.handle_move(
                         user_id, 
