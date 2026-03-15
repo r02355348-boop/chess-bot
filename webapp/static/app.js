@@ -274,8 +274,7 @@ class ChessApp {
         this.renderBoard();
         this.updateStatus();
         
-        // Check for game end
-        this.checkGameEnd();
+        // Server will check for game end and send game_over event
     }
 
     handleOpponentMove(moveData) {
@@ -283,7 +282,7 @@ class ChessApp {
         this.isMyTurn = true;
         this.renderBoard();
         this.updateStatus();
-        this.checkGameEnd();
+        // Server will send game_over event if game ended
     }
 
     updateStatus() {
