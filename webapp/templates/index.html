@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>♟️ Chess Online</title>
+    <link rel="stylesheet" href="/static/chessboard.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="main-menu" class="screen active">
+            <h1>♟️ Chess Online</h1>
+            <div class="menu-buttons">
+                <button id="btn-find-game" class="btn btn-primary">🔍 Найти игру</button>
+                <button id="btn-play-friend" class="btn btn-secondary">👥 Играть с другом</button>
+                <button id="btn-history" class="btn btn-secondary">📊 История</button>
+            </div>
+            <div id="matchmaking-status" class="hidden">
+                <div class="spinner"></div>
+                <p>Поиск противника...</p>
+                <button id="btn-cancel" class="btn btn-danger">Отмена</button>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div id="opponent-info" class="player-info">
+                    <span class="player-name">Противник</span>
+                    <span class="player-time">05:00</span>
+                </div>
+            </div>
+            <div id="chessboard"></div>
+            <div class="game-footer">
+                <div id="player-info" class="player-info">
+                    <span class="player-name">Вы</span>
+                    <span class="player-time">05:00</span>
+                </div>
+                <div class="game-controls">
+                    <button id="btn-resign" class="btn btn-danger">🏳️ Сдаться</button>
+                    <button id="btn-draw" class="btn btn-secondary">🤝 Ничья</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="screen">
+            <h2 id="game-result">Победа!</h2>
+            <p id="game-result-reason">Мат</p>
+            <button id="btn-new-game" class="btn btn-primary">🔄 Новая игра</button>
+        </div>
+    </div>
+
+    <script src="/static/chess.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
