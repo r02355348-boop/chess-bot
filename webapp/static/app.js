@@ -30,6 +30,68 @@ class ChessApp {
         this.renderBoard();
     }
 
+    connectSocket() {
+        const wsUrl = `wss://${window.location.host}/ws`;
+        console.log('Connecting to:', wsUrl);
+        
+        this.socket = new WebSocket(wsUrl);
+
+        this.socket.onopen = () => {
+            console.log('WebSocket connected');
+            this.socket.send(JSON.stringify({
+                event: 'connect',
+                userId: this.userId
+            }));
+        };
+
+        this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Received:', data);
+            this.handleServerMessage(data);
+        };
+
+        this.socket.onclose = () => {
+            console.log('WebSocket disconnected');
+            // Auto reconnect
+            setTimeout(() => this.connectSocket(), 3000);
+        };
+
+        this.socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+    }
+
+    handleServerMessage(data) {
+        const event = data.event || data.type;
+        
+        switch (event) {
+            case 'game_found':
+                this.gameId = data.gameId;
+                this.playerColor = data.color;
+                this.startGame(data.fen);
+                break;
+            case 'opponent_move':
+                this.handleOpponentMove(data.move);
+                break;
+            case 'game_over':
+                this.endGame(data.result, data.reason);
+                break;
+            case 'time_update':
+                this.timeLeft = data.times;
+                this.updateTimers();
+                break;
+            case 'error':
+                this.showNotification(data.message, 'error');
+                break;
+        }
+    }
+
+    sendMessage(data) {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify(data));
+        }
+    }
+
     setupEventListeners() {
         // Menu buttons
         document.getElementById('btn-find-game').addEventListener('click', () => this.findGame());
@@ -42,63 +104,25 @@ class ChessApp {
         document.getElementById('chessboard').addEventListener('click', (e) => this.handleBoardClick(e));
     }
 
-    connectSocket() {
-        const serverUrl = window.location.origin;
-        this.socket = io(serverUrl, {
-            transports: ['websocket'],
-            query: { userId: this.userId }
-        });
-
-        this.socket.on('connect', () => {
-            console.log('Connected to server');
-        });
-
-        this.socket.on('game_found', (data) => {
-            this.gameId = data.gameId;
-            this.playerColor = data.color;
-            this.startGame(data.fen);
-        });
-
-        this.socket.on('opponent_move', (data) => {
-            this.handleOpponentMove(data.move);
-        });
-
-        this.socket.on('game_over', (data) => {
-            this.endGame(data.result, data.reason);
-        });
-
-        this.socket.on('opponent_disconnected', () => {
-            this.showNotification('Противник отключился');
-        });
-
-        this.socket.on('time_update', (data) => {
-            this.timeLeft = data.times;
-            this.updateTimers();
-        });
-
-        this.socket.on('error', (data) => {
-            this.showNotification(data.message, 'error');
-        });
-    }
-
     findGame() {
-        if (!this.socket) {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
             this.connectSocket();
         }
 
         document.getElementById('matchmaking-status').classList.remove('hidden');
         document.querySelector('.menu-buttons').classList.add('hidden');
         
-        this.socket.emit('find_game', { userId: this.userId });
+        // Wait for connection then send find_game
+        setTimeout(() => {
+            this.sendMessage({ event: 'find_game', userId: this.userId });
+        }, 500);
     }
 
     cancelMatchmaking() {
         document.getElementById('matchmaking-status').classList.add('hidden');
         document.querySelector('.menu-buttons').classList.remove('hidden');
         
-        if (this.socket) {
-            this.socket.emit('cancel_matchmaking');
-        }
+        this.sendMessage({ event: 'cancel_matchmaking' });
     }
 
     startGame(fen) {
@@ -237,7 +261,8 @@ class ChessApp {
         this.game.makeMove(move);
         
         // Send to server
-        this.socket.emit('move', {
+        this.sendMessage({
+            event: 'move',
             gameId: this.gameId,
             move: move
         });
@@ -283,7 +308,7 @@ class ChessApp {
         }
         
         if (result) {
-            this.socket.emit('game_end', { gameId: this.gameId, result, reason });
+            this.sendMessage({ event: 'game_end', gameId: this.gameId, result, reason });
             this.endGame(result, reason);
         }
     }
@@ -309,12 +334,12 @@ class ChessApp {
 
     resign() {
         if (confirm('Вы уверены, что хотите сдаться?')) {
-            this.socket.emit('resign', { gameId: this.gameId });
+            this.sendMessage({ event: 'resign', gameId: this.gameId });
         }
     }
 
     offerDraw() {
-        this.socket.emit('offer_draw', { gameId: this.gameId });
+        this.sendMessage({ event: 'offer_draw', gameId: this.gameId });
         this.showNotification('Предложение ничьи отправлено');
     }
 
@@ -353,7 +378,7 @@ class ChessApp {
             
             // Check timeout
             if (this.timeLeft[this.playerColor] <= 0) {
-                this.socket.emit('timeout', { gameId: this.gameId, color: this.playerColor });
+                this.sendMessage({ event: 'timeout', gameId: this.gameId, color: this.playerColor });
             }
         }, 1000);
     }
