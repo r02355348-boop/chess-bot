@@ -14,9 +14,15 @@ import os
 
 app = FastAPI()
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="webapp/static"), name="static")
-templates = Jinja2Templates(directory="webapp/templates")
+# Get the directory where server.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Mount static files with absolute path
+static_dir = os.path.join(BASE_DIR, "webapp", "static")
+templates_dir = os.path.join(BASE_DIR, "webapp", "templates")
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory=templates_dir)
 
 # Game state management
 class GameManager:
